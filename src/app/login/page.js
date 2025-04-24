@@ -104,7 +104,7 @@ const LoginForm = () => {
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center z-1 mt-20"
+      className="fixed inset-0 flex items-center justify-center z-1 md:mt-20"
       style={{ overflow: "hidden" }}
     >
       {isLoading && (

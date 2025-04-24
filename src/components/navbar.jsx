@@ -84,14 +84,26 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
+    const threshold = 10;
     const handleScroll = () => {
       const currentY = window.scrollY;
-      setShowNavbar(currentY <= lastScrollY.current);
+      const maxScroll = document.body.scrollHeight - window.innerHeight;
+  
+      if (maxScroll <= 0) {
+        setShowNavbar(true);
+        return;
+      }
+  
+      if (Math.abs(currentY - lastScrollY.current) < threshold) return;
+  
+      setShowNavbar(currentY < lastScrollY.current || currentY <= 0);
       lastScrollY.current = currentY;
     };
+  
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+  
 
   useEffect(() => {
     const handleResize = () => {
