@@ -51,6 +51,9 @@ const RoadmapTest = ({
     }
   };
   
+  
+
+
   const handleAnswer = (value) => {
     const newAnswers = [...answers];
     newAnswers[currentQuestion] = value;
