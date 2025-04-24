@@ -1,0 +1,56 @@
+name: Sync Frontend to Target Repository
+
+on:
+  # Ejecutar en push a la rama salis
+  push:
+    branches: [ salis ]
+    
+  # Permitir ejecución manual
+  workflow_dispatch:
+  
+  # Ejecutar automáticamente cada 6 horas
+  schedule:
+    - cron: '0 */6 * * *'  # Cada 6 horas (00:00, 06:00, 12:00, 18:00 UTC)
+
+jobs:
+  sync-repos:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v3
+        with:
+          repository: U-tad-ASISTENTE-CARRERA/Frontend
+          path: source-repo
+          ref: salis  # Rama origen
+
+      - name: Checkout target repository
+        uses: actions/checkout@v3
+        with:
+          repository: SashVqz/GPSAcademicoVercel
+          path: target-repo
+          token: ${{ secrets.PAT_TOKEN }}
+          ref: master  # Rama destino
+
+      - name: Copy files from source to target
+        run: |
+          # Eliminar todo del repositorio destino excepto .git
+          find target-repo -mindepth 1 -path target-repo/.git -prune -o -exec rm -rf {} \; 2>/dev/null || true
+          
+          # Copiar todo desde el origen al destino (excluyendo .git)
+          cp -r source-repo/* target-repo/ || true
+          
+          # Copiar archivos ocultos (que empiezan con .)
+          find source-repo -name ".*" -type f -maxdepth 1 -exec cp {} target-repo/ \; 2>/dev/null || true
+
+      - name: Commit and push to target repository
+        run: |
+          cd target-repo
+          git config user.name "GitHub Action Bot"
+          git config user.email "action@github.com"
+          
+          # Obtener el último commit del repositorio fuente
+          LAST_COMMIT_MSG=$(cd ../source-repo && git log -1 --pretty=%B)
+          
+          git add -A
+          git commit -m "Sync from source repo: $LAST_COMMIT_MSG" || echo "No changes to commit"
+          git push origin master
