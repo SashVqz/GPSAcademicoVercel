@@ -16,7 +16,7 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
   const itemsPerPage = 4;
 
   console.log("Component rendered, isEditing:", isEditing);
-  
+
   useEffect(() => {
     console.log("Props received:", { skillsLength: skills?.length, onSaveExists: !!onSave, onDeleteExists: !!onDelete });
   }, [skills, onSave, onDelete]);
@@ -39,7 +39,7 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
       name: skill.name || "",
       level: convertLanguage(skill.level),
     })) : [];
-    
+
     console.log("Initialized skills:", initializedSkills);
     setTempSkills(initializedSkills);
 
@@ -53,7 +53,7 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
   const totalPages = Math.ceil(tempSkills.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentItems = tempSkills.slice(startIndex, startIndex + itemsPerPage);
-     
+
   const handleLevelChange = (index, event) => {
     console.log("Level change:", index, event.target.value);
     const updatedSkills = [...tempSkills];
@@ -74,13 +74,52 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
   }
 
   const handleDeleteSkill = (index) => {
-    console.log("Deleting skill at index:", index);
+    const updatedSkills = tempSkills.filter((_, i) => i !== index);
     const skillToDelete = tempSkills[index];
-    if (skillToDelete._id && Array.isArray(skills) && skills.some((sk) => sk._id === skillToDelete._id)) {
+  
+    if (
+      skillToDelete?._id &&
+      Array.isArray(skills) &&
+      skills.some((sk) => sk._id === skillToDelete._id)
+    ) {
       setDeletedSkills((prev) => [...prev, skillToDelete]);
     }
-    setTempSkills(tempSkills.filter((_, i) => i !== index));
-  }
+  
+    // Actualiza los estados derivados
+    setTempSkills(updatedSkills);
+  
+    // Reindexar `skillSearch`
+    const updatedSearch = updatedSkills.reduce((acc, sk, i) => {
+      acc[i] = sk.name;
+      return acc;
+    }, {});
+    setSkillSearch(updatedSearch);
+  
+    // Reindexar `dropdownOpen`
+    const updatedDropdown = updatedSkills.reduce((acc, _, i) => {
+      acc[i] = false;
+      acc[`level-${i}`] = false;
+      return acc;
+    }, {});
+    setDropdownOpen(updatedDropdown);
+  
+    // Reindexar errores
+    const updatedErrors = {};
+    Object.entries(e).forEach(([key, msg]) => {
+      const match = key.match(/^skill-(\d+)$/);
+      if (match) {
+        const oldIndex = parseInt(match[1]);
+        if (oldIndex < index) {
+          updatedErrors[`skill-${oldIndex}`] = msg;
+        } else if (oldIndex > index) {
+          updatedErrors[`skill-${oldIndex - 1}`] = msg;
+        }
+        // Si es igual a `index`, se omite (el skill fue borrado)
+      }
+    });
+    setE(updatedErrors);
+  };
+  
 
   const validateForm = () => {
     console.log("Validating form");
@@ -102,15 +141,15 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
 
   const saveChanges = async () => {
     console.log("Save button clicked");
-    
+
     if (!validateForm()) {
       console.log("Validation failed, aborting save");
       return;
     }
-    
+
     console.log("Validation successful, proceeding with save");
     setIsSaving(true);
-    
+
     try {
       const formattedSkills = tempSkills.map((skill) => ({
         _id: skill._id,
@@ -127,7 +166,7 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
           name: skill.name,
           level: reverseLevelMap[skill.level] || 'low'
         }));
-        
+
         if (typeof onDelete === 'function') {
           console.log("Calling onDelete with:", formattedDeletedSkills);
           await onDelete({ skills: formattedDeletedSkills });
@@ -137,7 +176,7 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
           console.error("onDelete is not a function:", onDelete);
         }
       }
-      
+
       if (formattedSkills.length > 0) {
         if (typeof onSave === 'function') {
           console.log("Calling onSave with:", { programming_languages: formattedSkills });
@@ -147,7 +186,7 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
           console.error("onSave is not a function:", onSave);
         }
       }
-      
+
       setIsEditing(false);
     } catch (error) {
       console.error("Error during save:", error);
@@ -170,7 +209,7 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
       name: skill.name || "",
       level: convertLanguage(skill.level),
     })) : [];
-    
+
     setTempSkills(resetSkills);
 
     const resetSearch = resetSkills.reduce((acc, skill, index) => {
@@ -195,24 +234,31 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
       setCurrentPage(currentPage - 1);
     }
   };
-    
-  return(
+
+  return (
     <>
       <div className="space-y-4 p-4 bg-white rounded-lg">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+
           <h2 className="text-lg font-semibold" style={{ color: theme.palette.text.hex }}>
             Lenguajes de Programación
           </h2>
 
-          <div className="flex gap-2">
+          <div
+            className="flex gap-2"
+            style={{
+              justifyContent: "flex-start",
+              flexWrap: "wrap",
+            }}
+          >
             {isEditing && (
               <button
                 type="button"
-                onClick={saveChanges} 
+                onClick={saveChanges}
                 disabled={isSaving}
                 className="px-4 py-2 text-white rounded-md transition duration-200"
-                style={{ 
-                  backgroundColor: isSaving ? '#cccccc' : theme.palette.primary.hex, 
+                style={{
+                  backgroundColor: isSaving ? '#cccccc' : theme.palette.primary.hex,
                   fontWeight: "bold",
                   cursor: isSaving ? 'not-allowed' : 'pointer'
                 }}
@@ -220,14 +266,14 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
                 {isSaving ? 'Guardando...' : 'Guardar cambios'}
               </button>
             )}
-                      
+
             <button
               type="button"
               onClick={() => (isEditing ? handleCancel() : setIsEditing(true))}
               disabled={isSaving}
               className="px-4 py-2 text-white rounded-md transition duration-200"
-              style={{ 
-                backgroundColor: isEditing ? theme.palette.error.hex : theme.palette.primary.hex, 
+              style={{
+                backgroundColor: isEditing ? theme.palette.error.hex : theme.palette.primary.hex,
                 fontWeight: "bold",
                 cursor: isSaving ? 'not-allowed' : 'pointer'
               }}
@@ -240,21 +286,21 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
         {tempSkills.length === 0 && deletedSkills.length === 0 && (
           <p className="text-gray-500 text-sm text-center">No hay Lenguajes de programación guardadas.</p>
         )}
-        
+
         {currentItems.map((sk, index) => {
           const globalIndex = startIndex + index;
           const filter_skill = filterOptions(skillSearch[globalIndex] || "");
           const hasError = e[`skill-${globalIndex}`];
 
-          return(
-            <div 
-              key={globalIndex} 
+          return (
+            <div
+              key={globalIndex}
               className="rounded-md p-4 border space-y-3"
-              style={{borderColor: theme.palette.lightGray.hex}}
-              >
-              
-              <div className="flex items-start gap-3">
-                <div className="w-3/4 relative space-y-1">
+              style={{ borderColor: theme.palette.lightGray.hex }}
+            >
+
+              <div className="flex flex-col md:flex-row items-start gap-3 w-full">
+                <div className="w-full md:w-3/4 relative space-y-1">
                   <label className="text-sm font-medium" style={{ color: theme.palette.text.hex }}>
                     Lenguaje de programación
                   </label>
@@ -267,17 +313,15 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
                         value={skillSearch[globalIndex] || ""}
                         onChange={(e) => {
                           const value = e.target.value;
-                          setSkillSearch({...skillSearch, [globalIndex]: value});
+                          setSkillSearch({ ...skillSearch, [globalIndex]: value });
                           handleSkillChange(globalIndex, "");
-                          setDropdownOpen({...dropdownOpen, [globalIndex]: true});
+                          setDropdownOpen({ ...dropdownOpen, [globalIndex]: true });
                         }}
-                        onFocus={() => setDropdownOpen({...dropdownOpen, [globalIndex]: true})}
+                        onFocus={() => setDropdownOpen({ ...dropdownOpen, [globalIndex]: true })}
                         onBlur={() => setTimeout(() => setDropdownOpen((prev) => ({ ...prev, [globalIndex]: false })), 150)}
                         className="block w-full p-2 border rounded-md"
                         style={{
-                          borderColor: hasError  
-                          ? theme.palette.error.hex
-                          : theme.palette.primary.hex,
+                          borderColor: hasError ? theme.palette.error.hex : theme.palette.primary.hex,
                           color: theme.palette.text.hex,
                         }}
                       />
@@ -289,8 +333,8 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
                               className="px-2 py-1 hover:bg-gray-100 cursor-pointer text-sm"
                               onMouseDown={() => {
                                 handleSkillChange(globalIndex, op);
-                                setSkillSearch({...skillSearch, [globalIndex]: op});
-                                setDropdownOpen({...dropdownOpen, [globalIndex]: false});
+                                setSkillSearch({ ...skillSearch, [globalIndex]: op });
+                                setDropdownOpen({ ...dropdownOpen, [globalIndex]: false });
                               }}
                             >
                               {op}
@@ -299,12 +343,12 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
                         </ul>
                       )}
                     </div>
-                  ) :(
+                  ) : (
                     <input
                       type="text"
                       value={sk.name}
                       disabled
-                      className="block w-full p-2 rounded-md" // quite border
+                      className="block w-full p-2 rounded-md"
                       style={{ color: theme.palette.text.hex }}
                     />
                   )}
@@ -315,7 +359,7 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
                   )}
                 </div>
 
-                <div className="w-1/4 relative space-y-1">
+                <div className="w-full md:w-1/4 relative space-y-1">
                   <label className="text-sm font-medium" style={{ color: theme.palette.text.hex }}>
                     Nivel
                   </label>
@@ -327,7 +371,7 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
                         value={sk.level}
                         readOnly
                         onClick={() => setDropdownOpen({ ...dropdownOpen, [`level-${globalIndex}`]: true })}
-                        onBlur={() => 
+                        onBlur={() =>
                           setTimeout(() => setDropdownOpen((prev) => ({ ...prev, [`level-${globalIndex}`]: false })), 150)
                         }
                         className="w-full p-2 border rounded-md cursor-pointer"
@@ -358,14 +402,14 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
                       type="text"
                       value={sk.level}
                       disabled
-                      className="block w-full p-2 rounded-md" // quite border
+                      className="block w-full p-2 rounded-md"
                       style={{ color: theme.palette.text.hex }}
                     />
                   )}
                 </div>
 
                 {isEditing && (
-                  <div className="pt-6 mt-2">
+                  <div className="pt-2 md:pt-6 mt-2 self-start">
                     <button
                       type="button"
                       onClick={() => handleDeleteSkill(globalIndex)}
@@ -378,6 +422,7 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
                   </div>
                 )}
               </div>
+
             </div>
           )
         })}
@@ -404,7 +449,7 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
             </button>
           </div>
         )}
-        
+
         {isEditing && (
           <button
             type="button"
@@ -419,5 +464,5 @@ const ProgrammingLanguages = ({ skills, setSkills, onSave, onDelete }) => {
     </>
   );
 };
-  
+
 export default ProgrammingLanguages;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { theme } from "@/constants/theme";
-
+import StudentSummaryCard from "./StudentSummaryCard";
 import { nameRegex } from "@/utils/ValidatorRegex";
 
 const PersonalInfo = ({
@@ -10,6 +10,9 @@ const PersonalInfo = ({
   endDate,
   gender,
   degree,
+  roadmap,
+  academicRecord,
+  skills,
   yearsCompleted,
   setFirstName,
   setLastName,
@@ -161,9 +164,28 @@ const PersonalInfo = ({
   return (
     <div className="p-4 bg-white rounded-lg">
 
+      <StudentSummaryCard
+        firstName={firstName}
+        lastName={lastName}
+        degree={degree}
+        yearsCompleted={yearsCompleted}
+        endDate={endDate}
+        roadmap={roadmap}
+        academicRecord={academicRecord}
+        skills={skills}
+      />
+
+      <hr
+        className="my-6 border-t mt-10 mb-10"
+        style={{ borderColor: theme.palette.lightGray.hex }}
+      />
+
+
       {/* Cabecera y botones */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-6">
+
         <h2 className="text-lg font-semibold">Información principal</h2>
+
         <div className="flex gap-2">
           {isEditing && (
             <button

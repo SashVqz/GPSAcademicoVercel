@@ -16,6 +16,10 @@ const SidebarNavigation = ({ activeSection, setActiveSection }) => {
       title: "Tutoría",
       items: [{ id: "pupils", label: "Alumnos tutelados" }],
     },
+    {
+      title: "Historial",
+      items: [{ id: "activityLog", label: "Registro de actividad" }],
+    },
   ];
 
   return (

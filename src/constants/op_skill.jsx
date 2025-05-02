@@ -1,7 +1,6 @@
 
 export const op_skill = [
       "Python",
-
       "HTML",
       "CSS",
       "JavaScript",

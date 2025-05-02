@@ -36,12 +36,12 @@ const Home = () => {
       const metadataData = await metadataRes.json();
       localStorage.setItem("metadata", JSON.stringify(metadataData.metadata));
       setMetadata(metadataData.metadata);
-      
+
       const academicAlerts = generateAlerts(metadataData.metadata);
       setAlerts(academicAlerts);
-      
+
       const hasEmptyAlert = academicAlerts.some(alert => alert.keyword === "empty");
-      
+
       if (!hasEmptyAlert) {
         try {
           const roadmapRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/userRoadmap`, {
@@ -51,7 +51,7 @@ const Home = () => {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           });
-    
+
           if (roadmapRes.ok) {
             const roadmapData = await roadmapRes.json();
             setRoadmap(roadmapData.roadmap);
@@ -63,7 +63,7 @@ const Home = () => {
           console.error("Error fetching roadmap:", error);
         }
       }
-      
+
       setIsLoading(false);
     } catch (error) {
       console.error("Error fetching metadata:", error);
@@ -80,7 +80,7 @@ const Home = () => {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      
+
       if (response.ok) {
         const roadmapRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/userRoadmap`, {
           method: "GET",
@@ -89,7 +89,7 @@ const Home = () => {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
-        
+
         if (roadmapRes.ok) {
           const freshRoadmapData = await roadmapRes.json();
           setRoadmap(freshRoadmapData.roadmap);
@@ -195,9 +195,12 @@ const Home = () => {
       <div className="flex justify-center w-full px-6 py-10 ">
         <div className="w-full max-w-6xl space-y-8">
           {/* Cabecera del estudiante */}
-          <StudentHeaderCard
-            metadata={metadata}
-          />
+
+          {alerts.length <= 0 && (
+            <StudentHeaderCard
+              metadata={metadata}
+            />
+          )}
 
           {/* Mensaje recordatorio de actualizar perfil */}
           {alerts.length > 0 && (
@@ -205,7 +208,7 @@ const Home = () => {
           )}
 
           {/* Roadmap */}
-          {roadmap && (
+          {alerts.length <= 0 && roadmap && (
             <div className="bg-white rounded-2xl shadow-md p-10">
               <Roadmap
                 roadmap={roadmap}
@@ -216,14 +219,18 @@ const Home = () => {
             </div>
           )}
 
-          <div className="bg-white rounded-2xl shadow-md p-10">
-            <ExploreMoreRoadmapsCard />
-          </div>
-
+          {alerts.length <= 0 && (
+            <div className="bg-white rounded-2xl shadow-md p-10">
+              <ExploreMoreRoadmapsCard />
+            </div>
+          )}
+          
           {/* Oportunidades */}
-          <div className="bg-white rounded-2xl shadow-md p-10">
-            <CareerOpportunityComponent />
-          </div>
+          {alerts.length <= 0 && (
+            <div className="bg-white rounded-2xl shadow-md p-10">
+              <CareerOpportunityComponent />
+            </div>
+          )}
         </div>
       </div>
     </div>

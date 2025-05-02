@@ -520,3 +520,8 @@ export const roadmapMenuItems = Object.values(roadmapsData).map(roadmap => ({
     id: roadmap.id,
     name: roadmap.name
 }));
+
+export const getRoadmapByName = (name) => {
+  const allRoadmaps = Object.values(roadmapsData);
+  return allRoadmaps.find(roadmap => roadmap.name.toLowerCase() === name.toLowerCase()) || null;
+};

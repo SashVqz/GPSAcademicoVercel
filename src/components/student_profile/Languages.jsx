@@ -11,7 +11,7 @@ const Languages = ({ languages, setLanguages, onSave, onDelete }) => {
   const [deletedLanguages, setDeletedLanguages] = useState([]);
   const [languageSearch, setLanguageSearch] = useState({});
   const [dropdownOpen, setDropdownOpen] = useState({});
-  
+
   useEffect(() => {
     setTempLanguages([...languages]);
   }, [languages]);
@@ -42,7 +42,7 @@ const Languages = ({ languages, setLanguages, onSave, onDelete }) => {
       ...tempLanguages,
       { _id: null, language: "", level: "A1" },
     ]);
-    setLanguageSearch(prev => ({...prev, [newIndex]: ""}));
+    setLanguageSearch(prev => ({ ...prev, [newIndex]: "" }));
   };
 
   const markLanguageForDeletion = (index) => {
@@ -51,10 +51,10 @@ const Languages = ({ languages, setLanguages, onSave, onDelete }) => {
       setDeletedLanguages((prev) => [...prev, languageToDelete]);
     }
     setTempLanguages(tempLanguages.filter((_, i) => i !== index));
-    
-    const updatedSearch = {...languageSearch};
+
+    const updatedSearch = { ...languageSearch };
     delete updatedSearch[index];
-    
+
     const newSearchState = {};
     Object.keys(updatedSearch).forEach(key => {
       const keyNum = parseInt(key);
@@ -64,7 +64,7 @@ const Languages = ({ languages, setLanguages, onSave, onDelete }) => {
         newSearchState[keyNum] = updatedSearch[key];
       }
     });
-    
+
     setLanguageSearch(newSearchState);
   };
 
@@ -72,7 +72,7 @@ const Languages = ({ languages, setLanguages, onSave, onDelete }) => {
     let newErrors = {};
     let isDuplicate = false;
     let seenLanguages = new Set();
-    
+
     tempLanguages.forEach((lang, index) => {
       if (!lang.language.trim()) {
         newErrors[`language-${index}`] = "El campo no puede estar vacío.";
@@ -85,14 +85,14 @@ const Languages = ({ languages, setLanguages, onSave, onDelete }) => {
         seenLanguages.add(lang.language);
       }
     });
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = async () => {
     if (!validateForm()) return;
-    
+
     try {
       if (deletedLanguages.length > 0) {
         const deleteSuccess = await onDelete({
@@ -102,28 +102,28 @@ const Languages = ({ languages, setLanguages, onSave, onDelete }) => {
             level,
           })),
         });
-        
+
         if (!deleteSuccess) {
           throw new Error("Error al eliminar idiomas");
         }
-        
+
         setDeletedLanguages([]);
       }
-      
+
       if (tempLanguages.length > 0) {
         const updatedLanguages = tempLanguages.map(({ _id, language, level }) => ({
           _id,
           language,
           level,
         }));
-        
+
         const saveSuccess = await onSave({ languages: updatedLanguages });
-        
+
         if (!saveSuccess) {
           throw new Error("Error al guardar idiomas");
         }
       }
-      
+
       setIsEditing(false);
     } catch (error) {
       console.error("Error al actualizar idiomas:", error.message);
@@ -146,10 +146,12 @@ const Languages = ({ languages, setLanguages, onSave, onDelete }) => {
 
   return (
     <div className="space-y-4 p-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+
         <h2 className="text-lg font-semibold" style={{ color: theme.palette.text.hex }}>
           Añadir idiomas
         </h2>
+
         <div className="flex gap-2">
           {isEditing && (
             <button
@@ -266,7 +268,7 @@ const Languages = ({ languages, setLanguages, onSave, onDelete }) => {
                       value={lang.level}
                       readOnly
                       onClick={() => setDropdownOpen({ ...dropdownOpen, [`level-${index}`]: true })}
-                      onBlur={() => 
+                      onBlur={() =>
                         setTimeout(() => setDropdownOpen((prev) => ({ ...prev, [`level-${index}`]: false })), 150)
                       }
                       className="w-full p-2 border rounded-md cursor-pointer"

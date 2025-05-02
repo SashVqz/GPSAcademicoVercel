@@ -12,6 +12,7 @@ const LoadingModal = dynamic(() => import("@/components/LoadingModal"), {
 import SidebarNavigation from "@/components/teacher_profile/SidebarNavigationTeacher";
 import Pupils from "@components/teacher_profile/Pupils";
 import PersonalInfo from "@/components/teacher_profile/PersonalInfo";
+import ActivityLog from "@/components/student_profile/ActivityLog";
 
 const TeacherProfile = () => {
   const router = useRouter();
@@ -29,49 +30,43 @@ const TeacherProfile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [students, setStudents] = useState([]);
   const [studentsError, setStudentsError] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
   const [activeSection, setActiveSection] = useState("personal");
+  const [updateHistory, setUpdateHistory] = useState([]);
   const [deletionRequested, setDeletionRequested] = useState(false);
   const [authChecking, setAuthChecking] = useState(true);
 
   useEffect(() => {
-    const init = () => {
-      if (typeof window === "undefined") return;
+    const user = JSON.parse(localStorage.getItem("user"));
+    const token = localStorage.getItem("token");
 
-      const storedToken = localStorage.getItem("token");
-      if (!storedToken) {
-        router.push("/login");
-        return;
+    if (!user || !token) {
+      router.push("/login");
+      return;
+    }
+
+    if (user.role !== "TEACHER" || user.id !== id) {
+      router.push(`/unauthorized`);
+      return;
+    }
+
+    fetchData(token);
+    fetchStudents(token);
+    fetchUpdateHistory(token);
+    
+  }, []);
+
+
+  useEffect(() => {
+      if (activeSection === "activityLog") {
+        const token = localStorage.getItem("token");
+        if (token) fetchUpdateHistory(token);
       }
-      setToken(storedToken);
+    }, [activeSection]);
 
-      let storedUser = null;
-      try {
-        storedUser = JSON.parse(localStorage.getItem("user"));
-      } catch {
-        router.push("/login");
-        return;
-      }
 
-      if (!storedUser?.id || !storedUser?.role) {
-        router.push("/login");
-        return;
-      }
+  // FETCHING DATA
 
-      if (storedUser.id !== id) {
-        const targetRole = storedUser.role.toLowerCase();
-        router.push(`/${targetRole}/profile/${storedUser.id}`);
-        return;
-      }
-
-      setAuthChecking(false); // Validación completa
-    };
-
-    init();
-  }, [id]);
-
-  const fetchData = async () => {
-    if (!token || !id) return;
+  const fetchData = async (token) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/metadata`, {
         method: "GET",
@@ -80,33 +75,37 @@ const TeacherProfile = () => {
           Authorization: `Bearer ${token}`,
         },
       });
+  
       if (!response.ok) {
         throw new Error("Error al obtener metadatos del profesor");
       }
+  
       const data = await response.json();
+  
       if (!data.metadata) {
         router.push(`/data_complete/teacher/${id}`);
         return;
       }
+  
       const metadata = data.metadata || {};
-
+  
       setShowModal(Object.keys(metadata).length === 0);
-
+  
       setFirstName(metadata.firstName);
       setLastName(metadata.lastName);
       setGender(metadata.gender);
       setSpecialization(metadata.specialization);
+      setUpdateHistory(metadata.updateHistory || []);
       setDeletionRequested(data.metadata?.deletionRequestStatus === "pending");
-
+  
     } catch (error) {
       setError(error.message);
     } finally {
       setIsLoading(false);
     }
   };
-
-  const fetchStudents = async () => {
-    if (!token || !id) return;
+  
+  const fetchStudents = async (token) => {
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/student/teacher/getAllStudents`,
@@ -118,25 +117,39 @@ const TeacherProfile = () => {
           },
         }
       );
-
+  
       if (!response.ok) {
         throw new Error("Error al obtener la lista de estudiantes");
       }
-
+  
       const data = await response.json();
-
+  
       setStudents(data.message === "No students found" ? [] : data);
     } catch (error) {
       setStudentsError(error.message);
     }
   };
 
-  useEffect(() => {
-    if (authChecking) return;
-    fetchData();
-    fetchStudents();
-  }, [token, id]);
+  const fetchUpdateHistory = async (token) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/updateHistory`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
+      if (!response.ok) throw new Error("Error obteniendo el historial de cambios.");
+      const data = await response.json();
+      if (data.updateHistory) setUpdateHistory(data.updateHistory);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+
+  // HANDLERS
 
   const handleRequestDeletion = async (reason) => {
     if (deletionRequested) return; // Protección en estado local
@@ -169,7 +182,6 @@ const TeacherProfile = () => {
       return { success: false, message: "Error de red o inesperado al solicitar la baja." };
     }
   };
-
 
   const handleCancelDeletion = async () => {
     try {
@@ -210,7 +222,7 @@ const TeacherProfile = () => {
 
   return (
     <>
-      {isLoading && <LoadingModal message="Cargando perfil..." />}
+      {isLoading && <LoadingModal />}
 
       {!isLoading && showModal && (
         <ErrorPopUp
@@ -233,6 +245,7 @@ const TeacherProfile = () => {
 
           <div className="bg-white w-full min-w-full md:win-w-screen rounded-lg">
             <div className="w-full max-w-8xl flex flex-col md:flex-row">
+
               <div className="w-full md:w-64 overflow-x-auto md:overflow-visible">
                 <SidebarNavigation
                   activeSection={activeSection}
@@ -267,6 +280,13 @@ const TeacherProfile = () => {
                     setToken={setToken}
                   />
                 )}
+
+                {activeSection === "activityLog" && (
+                  <ActivityLog
+                    updateHistory={updateHistory}
+                  />
+                )}
+
               </div>
             </div>
           </div>

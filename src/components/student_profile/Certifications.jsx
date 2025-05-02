@@ -110,7 +110,7 @@ const Certifications = ({ certifications, setCertifications, onSave, onDelete })
   return (
     <div className="space-y-4 p-4 bg-white rounded-lg">
       {/* Header con botón de edición */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
         <h2 className="text-lg font-semibold" style={{ color: theme.palette.text.hex }}>
           Certificaciones
         </h2>

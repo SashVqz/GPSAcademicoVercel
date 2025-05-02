@@ -11,6 +11,7 @@ const SidebarNavigation = ({ activeSection, setActiveSection }) => {
     {
       title: "Perfil personal",
       items: [
+        // { id: "dashboard", label: "Resumen" },
         { id: "personal", label: "Información principal" },
         { id: "languages", label: "Idiomas" },
         { id: "programming", label: "Lenguajes de programación" },
