@@ -33,7 +33,7 @@ const StudentSummaryCard = ({
   const goToRoadmap = () => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (user?.id) {
-      window.location.href = `http://localhost:3001/home/student/${user.id}`;
+      window.location.href = `/home/student/${user.id}`;
     } else {
       console.error("ID de usuario no encontrado en localStorage.");
     }

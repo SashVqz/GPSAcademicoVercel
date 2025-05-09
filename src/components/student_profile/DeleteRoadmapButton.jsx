@@ -41,7 +41,7 @@ const DeleteRoadmapButton = () => {
     setErrorMsg(null);
 
     try {
-      const updateResponse = await fetch("http://localhost:3000/metadata", {
+      const updateResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/metadata`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -64,7 +64,7 @@ const DeleteRoadmapButton = () => {
         throw new Error(errorMessage);
       }
 
-      const response = await fetch("http://localhost:3000/userRoadmap", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/userRoadmap`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -112,7 +112,7 @@ const DeleteRoadmapButton = () => {
         onClick={openModal}
         className="flex items-center justify-center gap-2 px-5 py-2 transition-all hover:opacity-90"
         style={{
-          backgroundColor: theme.palette.error.hex,
+          backgroundColor: theme.palette.primary.hex,
           color: theme.palette.background.hex,
           padding: "0.5rem 1.25rem",
           borderRadius: theme.buttonRadios.m,
